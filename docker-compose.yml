@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  app:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laravel-shop-app
+    container_name: laravel-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - db
+    command: sh /wait-for-mysql.sh  # ✅ Only this command
+    networks:
+      - laravel
+
+  db:
+    platform: linux/amd64
+    image: mysql:5.7
+    container_name: laravel-db
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - laravel
+
+  phpmyadmin:
+    platform: linux/amd64
+    image: phpmyadmin/phpmyadmin
+    container_name: laravel-phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: laravel
+      PMA_PASSWORD: secret
+    networks:
+      - laravel
+
+volumes:
+  dbdata:
+
+networks:
+  laravel:
